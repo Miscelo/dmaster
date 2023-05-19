@@ -1,6 +1,7 @@
+#!/usr/bin/env python3
 
 
-print(" Hallo 42")
+'''
+Main program that will handle a menu.
+'''
 
-
-print("check testbranch")
