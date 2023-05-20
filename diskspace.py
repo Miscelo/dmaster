@@ -2,33 +2,36 @@
 import shutil
 import sys
 
+with open("/etc/fstab", "r") as fobj:
+    for line in fobj:
+        if line[:4] == 'UUID' or line[:5] == 'LABEL':
+            print(line)
+
 """ FunctionReturn True, if there is enough disk space"""
-def disk_usage(path, min_absolute, min_percent):
+def disk_usage(path, min_emergency, min_critical):
     # Size, Used , Available, Used %
     total, used, free = shutil.disk_usage(path)
     #Cambiamos de Bytes a GB
-    totalGB = total / 2**30
-    usedGB = used / 2**30
-    freeGB = free / 2**30
-    free_percent = 100 * usedGB / totalGB
+    totalGB = round(total / 2**30, 2)
+    usedGB = round(used / 2**30, 2)
+    freeGB = round(free / 2**30, 2)
+    used_percent = round(100 * (used / 2**30) / (total / 2**30), 2)
+
+    print("Total: {}GB, Used: {}GB, Available: {}GB, Used: {}%".format(totalGB, usedGB, freeGB, used_percent))
 
 
-    print("{} GB free , used {} GB of {} GB".format(round(freeGB,2), round(usedGB, 2), round(totalGB,2)))
-    print("{}% free".format(round(free_percent, 2)))
-
-    # return value panic=0, critical=1, alert=3, ...
-    if free_percent < min_percent or freeGB < min_absolute:
+    if (100 - used_percent) < min_emergency:
+        print("Emergency alert! Diskspace {}% full.".format(path, used_percent))
+        return False
+    elif (100 - used_percent) < min_critical:
+        print("Emergency alert! Diskspace {}% full.".format(path, used_percent))
         return False
     return True
 
-path = "/var/"
+path = "/boot/"
 
 if not disk_usage(path, 2, 10):
     print("Error, not enough disk space.")
 else:
     print("enough")
 
-a = 109272832 / 1024    #KB
-b = a /1024             #MB
-c = b/1024              #GB
-print(c)
