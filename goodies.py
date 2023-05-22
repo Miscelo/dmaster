@@ -7,7 +7,9 @@ def createConfigFile():
     configFile='dmaster.conf'
     if not os.path.isfile(configFile):
         with open(configFile, "w") as fobj:
-            fobj.write("# Set path to logfile. Example: logfile=/var/log/dmaster.log\n"
+            fobj.write("# Directorys that dmaster control the disk usage.\n"
+                        "directories=/,/home/,/var,/boot\n"
+                        "# Set path to logfile. Example: logfile=/var/log/dmaster.log\n"
                         "logFile=dmaster.log\n"
                         "# Set logging level. Recommend INFO [CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET]\n"
                         "logLevel=INFO\n")
