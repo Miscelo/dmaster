@@ -9,7 +9,7 @@ Main program that will handle a menu.
 '''
 
 def main():
-    print("************* DMASTER ***************")
+    print("************* Demon Master ***************")
     diskspace.disk_usage()
     openports = dports.openports()
     print(openports)
