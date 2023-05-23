@@ -1,4 +1,5 @@
 import os
+import goodies
 import logging.handlers
 
 
@@ -8,55 +9,48 @@ def createConfigFile():
     if not os.path.isfile(configFile):
         with open(configFile, "w") as fobj:
             fobj.write("# Directorys that dmaster control the disk usage.\n"
-                        "directories=/,/home/,/var,/boot\n"
+                        "directories=/home/,/,/boot,/var\n"
+                        "# Set the critical limit of disk usage in % to throw alerts, send reports and create log.\n"
+                        "disk_usage_critical=98\n"
+                        "# Set the warning limit o disk usage in % to throw alerts, send reports and create log.\n"
+                        "disk_usage_warning=90\n"
                         "# Set path to logfile. Example: logfile=/var/log/dmaster.log\n"
                         "logFile=dmaster.log\n"
                         "# Set logging level. Recommend INFO [CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET]\n"
-                        "logLevel=INFO\n")
+                        "logLevel=INFO)\n")
 
 
-# Get path and file where to store the logging file get from dmaster.conf file.
-# Preconfiguration is main program folder 'logfile=dmaster.conf'
-def getLogFilefromConfig():
+# returns a dictionary with all config data from dmaster.conf inside.
+def getConfigData():
     createConfigFile()
-    logfile=""
+    configs = {}
     try:
-        with open("dmaster.conf", "r") as flog:
-            for line in flog:
-                if line.startswith('logFile'):
-                    logfile = line.split("=")[1].rstrip('\n')
-        return logfile
+        with open("dmaster.conf", "r") as fobj:
+            for line in fobj:
+                # empty line in file and lines starting with # will be ingored.
+                if not len(line.strip()) == 0 and not line.startswith('#'):
+                    key = line.split('=')[0].rstrip('\n')
+                    value = line.split('=')[1].rstrip('\n')
+                    # if there a more values seperated with coma, then value in dictionary will be a list
+                    if key == 'directories':
+                        value = value.split(',')
+                    configs[key] = value
+        return configs
     except Exception:
-        log("dmaster.goodies", "WARNING", "Could not read dmaster.conf file")
-    finally:
-        # Precase, if dmaster.conf is not readable
-        return 'dmaster.log'
+        goodies.log("dmaster.goodies","ERROR", "Config file could not be read.")
 
 
-
-# Get loglevel for logging file from dmaster.conf file.
-# [CRITICAL=50, ERROR=40, WARNING=30, INFO=20, DEBUG=10, NOTSET=0]
-def getLogLevel():
-    createConfigFile()
-    level=""
-    try:
-        with open("dmaster.conf", "r") as flog:
-            for line in flog:
-                if line.startswith('logLevel'):
-                    level=line.split("=")[1].rstrip('\n')
-        return level
-    except Exception:
-        log("dmaster.goodies", "WARNING", "Could not read dmaster.conf file.")
-    finally:
-        return 'INFO'
 
 
 # catch logs and printed them in dmaster.log.
-def log(loggername='dmaster', loglevel=getLogLevel(), message='dmaster fails.'):
+def log(loggername='dmaster', loglevel='INFO', message='dmaster fails.'):
+    #get path from config file where logs will be stored
+    configs = getConfigData()
+    logfile = configs['logFile']
+    loglevel = configs['logLevel']
     logger = logging.getLogger(loggername)
     level = logging.getLevelName(loglevel)
     logger.setLevel(level)
-    logfile = getLogFilefromConfig()
     fh = logging.FileHandler(logfile)
     fh.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s %(name)s\t['+str(os.getpid())+']: %(levelname)s\t %(message)s')
@@ -64,9 +58,16 @@ def log(loggername='dmaster', loglevel=getLogLevel(), message='dmaster fails.'):
     sh = logging.StreamHandler()
     logger.addHandler(fh)
     logger.addHandler(sh)
-    logger.debug(message)
-    logger.info(message)
-    logger.warning(message)
-    logger.error(message)
-    logger.critical(message)
+    if loglevel == 'debug':
+        logger.debug(message)
+    elif loglevel == 'INFO':
+        logger.info(message)
+    elif loglevel == 'WARNING':
+        logger.warning(message)
+    elif loglevel == 'ERROR':
+        logger.error(message)
+    elif loglevel == 'CRITICAL':
+        logger.critical(message)
+    else:
+        pass
 
