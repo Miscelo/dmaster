@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# enseña puertos abiertos que estan en uso de demonios.
+
 import goodies
 import socket
 import time
 
+# Function return local IP to use it in openports() function.
 def getIP():
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -14,8 +15,9 @@ def getIP():
         goodies.log("dmaster.dports", "ERROR", "Can not establish socket connection to find local IP Address.")
     return local_ip
 
-getIP()
 
+
+# Function check open ports in the whole range.
 def openports(target=getIP()):
     target_IP = socket.gethostbyname(target)
     portlist = []
